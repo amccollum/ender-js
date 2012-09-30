@@ -21,10 +21,29 @@
     , oldRequire = context['require']
     , oldProvide = context['provide']
 
-  function require (identifier) {
+  function require (path, base, prefix) {
+    // Handle relative paths
+    if (path.charAt(0) == '.') {
+      path = path.replace(/(\.js)?$/, '.js')
+    
+      if (base && ~(i = base.lastIndexOf('/')))
+          path = base.substr(0, i+1) + path
+
+      parts = path.split('/')
+      while (~(i = parts.indexOf('.')))
+        parts.splice(i, 1)
+
+      while ((i = parts.lastIndexOf('..')) > 0)
+        parts.splice(i-1, 2)
+        
+      path = parts.join('/')
+    }
+    
+    prefix && (path = prefix + path)
+
     // modules can be required from ender's build system, or found on the window
-    var module = modules['$' + identifier] || window[identifier]
-    if (!module) throw new Error("Ender Error: Requested module '" + identifier + "' has not been defined.")
+    var module = modules['$' + path] || window[path]
+    if (!module) throw new Error("Ender Error: Requested module '" + path + "' has not been defined.")
     return module
   }
 
